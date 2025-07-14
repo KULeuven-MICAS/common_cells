@@ -1,14 +1,8 @@
-// Copyright 2018 ETH Zurich and University of Bologna.
-// Copyright and related rights are licensed under the Solderpad Hardware
-// License, Version 0.51 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// http://solderpad.org/licenses/SHL-0.51. Unless required by applicable law
-// or agreed to in writing, software, hardware and materials distributed under
-// this License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-// CONDITIONS OF ANY KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations under the License.
+// Copyright 2025 KU Leuven.
+// Solderpad Hardware License, Version 0.51, see LICENSE for details.
+// SPDX-License-Identifier: SHL-0.51
 
-// Antonio Pullini <pullinia@iis.ee.ethz.ch>
+// Author: Yunhao Deng <yunhao.deng@kuleuven.be>
 
 module sync #(
     parameter int unsigned STAGES = 2,
@@ -20,18 +14,23 @@ module sync #(
     output logic serial_o
 );
 
-   (* dont_touch = "true" *)
-   (* async_reg = "true" *)
-   logic [STAGES-1:0] reg_q;
+  (* dont_touch = "true" *)
+  logic [Depth:0] d_chain;
 
-    always_ff @(posedge clk_i, negedge rst_ni) begin
-        if (!rst_ni) begin
-            reg_q <= {STAGES{ResetValue}};
-        end else begin
-            reg_q <= {reg_q[STAGES-2:0], serial_i};
-        end
+  assign d_chain[0] = serial_i;
+
+  for (genvar i = 0; i < Depth; i++) begin : gen_sync_regs
+    (* async *) logic d;
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        d <= 1'b0;
+      end else begin
+        d <= d_chain[i];
+      end
     end
+    assign d_chain[i+1] = d;
+  end
 
-    assign serial_o = reg_q[STAGES-1];
+  assign serial_o = d_chain[Depth];
 
 endmodule
