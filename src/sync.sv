@@ -15,11 +15,11 @@ module sync #(
 );
 
   (* dont_touch = "true" *)
-  logic [Depth:0] d_chain;
+  logic [STAGES:0] d_chain;
 
   assign d_chain[0] = serial_i;
 
-  for (genvar i = 0; i < Depth; i++) begin : gen_sync_regs
+  for (genvar i = 0; i < STAGES; i++) begin : gen_sync_regs
     (* async *) logic d;
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (!rst_ni) begin
@@ -31,6 +31,6 @@ module sync #(
     assign d_chain[i+1] = d;
   end
 
-  assign serial_o = d_chain[Depth];
+  assign serial_o = d_chain[STAGES];
 
 endmodule
