@@ -8,13 +8,13 @@ module sync #(
     parameter int unsigned STAGES = 2,
     parameter bit ResetValue = 1'b0
 ) (
-    input  logic clk_i,
-    input  logic rst_ni,
-    input  logic serial_i,
+    input logic clk_i,
+    input logic rst_ni,
+    (* async *) input logic serial_i,
     output logic serial_o
 );
 
-  (* async *) wire [STAGES:0] d_chain;
+  logic [STAGES:0] d_chain;
 
   assign d_chain[0] = serial_i;
 
