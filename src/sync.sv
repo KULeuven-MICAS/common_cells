@@ -14,13 +14,12 @@ module sync #(
     output logic serial_o
 );
 
-  (* dont_touch = "true" *)
-  logic [STAGES:0] d_chain;
+  (* async *) wire [STAGES:0] d_chain;
 
   assign d_chain[0] = serial_i;
 
   for (genvar i = 0; i < STAGES; i++) begin : gen_sync_regs
-    (* async *) logic d;
+    (* dont_touch = "true", ASYNC_REG = "true" *) logic d;
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (!rst_ni) begin
         d <= 1'b0;
