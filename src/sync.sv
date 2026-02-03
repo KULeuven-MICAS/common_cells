@@ -10,7 +10,7 @@ module sync #(
 ) (
     input logic clk_i,
     input logic rst_ni,
-    (* async *) input logic serial_i,
+    input logic serial_i,
     output logic serial_o
 );
 
