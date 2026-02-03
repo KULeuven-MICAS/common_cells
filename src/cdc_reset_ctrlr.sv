@@ -108,78 +108,78 @@
 
 module cdc_reset_ctrlr
   import cdc_reset_ctrlr_pkg::*;
- #(
-  /// The number of synchronization stages to use for the
-  /// clear signal request/acknowledge. Must be less than the
-  /// number of sync stages used in the CDC.
-  parameter int unsigned SYNC_STAGES = 2,
-  /// Whether an asynchronous reset shall cause a clear
-  /// request to be sent to the other side.
-  parameter logic        CLEAR_ON_ASYNC_RESET = 1'b1
-)(
-  // Side A (both sides are symmetric)
-  input logic  a_clk_i,
-  input logic  a_rst_ni,
-  input logic  a_clear_i,
-  output logic a_clear_o,
-  input logic a_clear_ack_i,
-  output logic a_isolate_o,
-  input logic  a_isolate_ack_i,
-  // Side B (both sides are symmetric)
-  input logic  b_clk_i,
-  input logic  b_rst_ni,
-  input logic  b_clear_i,
-  output logic b_clear_o,
-  input logic  b_clear_ack_i,
-  output logic b_isolate_o,
-  input logic  b_isolate_ack_i
+#(
+    /// The number of synchronization stages to use for the
+    /// clear signal request/acknowledge. Must be less than the
+    /// number of sync stages used in the CDC.
+    parameter int unsigned SYNC_STAGES          = 2,
+    /// Whether an asynchronous reset shall cause a clear
+    /// request to be sent to the other side.
+    parameter logic        CLEAR_ON_ASYNC_RESET = 1'b1
+) (
+    // Side A (both sides are symmetric)
+    input  logic a_clk_i,
+    input  logic a_rst_ni,
+    input  logic a_clear_i,
+    output logic a_clear_o,
+    input  logic a_clear_ack_i,
+    output logic a_isolate_o,
+    input  logic a_isolate_ack_i,
+    // Side B (both sides are symmetric)
+    input  logic b_clk_i,
+    input  logic b_rst_ni,
+    input  logic b_clear_i,
+    output logic b_clear_o,
+    input  logic b_clear_ack_i,
+    output logic b_isolate_o,
+    input  logic b_isolate_ack_i
 );
 
   (* dont_touch = "true" *)
-  logic        async_a2b_req, async_b2a_ack;
+  logic async_a2b_req, async_b2a_ack;
   (* dont_touch = "true" *)
   clear_seq_phase_e async_a2b_next_phase;
   (* dont_touch = "true" *)
-  logic        async_b2a_req, async_a2b_ack;
+  logic async_b2a_req, async_a2b_ack;
   (* dont_touch = "true" *)
   clear_seq_phase_e async_b2a_next_phase;
 
   cdc_reset_ctrlr_half #(
-    .SYNC_STAGES          ( SYNC_STAGES          ),
-    .CLEAR_ON_ASYNC_RESET ( CLEAR_ON_ASYNC_RESET )
+      .SYNC_STAGES         (SYNC_STAGES),
+      .CLEAR_ON_ASYNC_RESET(CLEAR_ON_ASYNC_RESET)
   ) i_cdc_reset_ctrlr_half_a (
-    .clk_i              ( a_clk_i              ),
-    .rst_ni             ( a_rst_ni             ),
-    .clear_i            ( a_clear_i            ),
-    .clear_o            ( a_clear_o            ),
-    .clear_ack_i        ( a_clear_ack_i        ),
-    .isolate_o          ( a_isolate_o          ),
-    .isolate_ack_i      ( a_isolate_ack_i      ),
-    (* async *) .async_next_phase_o ( async_a2b_next_phase ),
-    (* async *) .async_req_o        ( async_a2b_req        ),
-    (* async *) .async_ack_i        ( async_b2a_ack        ),
-    (* async *) .async_next_phase_i ( async_b2a_next_phase ),
-    (* async *) .async_req_i        ( async_b2a_req        ),
-    (* async *) .async_ack_o        ( async_a2b_ack        )
+      .clk_i             (a_clk_i),
+      .rst_ni            (a_rst_ni),
+      .clear_i           (a_clear_i),
+      .clear_o           (a_clear_o),
+      .clear_ack_i       (a_clear_ack_i),
+      .isolate_o         (a_isolate_o),
+      .isolate_ack_i     (a_isolate_ack_i),
+      .async_next_phase_o(async_a2b_next_phase),
+      .async_req_o       (async_a2b_req),
+      .async_ack_i       (async_b2a_ack),
+      .async_next_phase_i(async_b2a_next_phase),
+      .async_req_i       (async_b2a_req),
+      .async_ack_o       (async_a2b_ack)
   );
 
-    cdc_reset_ctrlr_half #(
-    .SYNC_STAGES          ( SYNC_STAGES          ),
-    .CLEAR_ON_ASYNC_RESET ( CLEAR_ON_ASYNC_RESET )
+  cdc_reset_ctrlr_half #(
+      .SYNC_STAGES         (SYNC_STAGES),
+      .CLEAR_ON_ASYNC_RESET(CLEAR_ON_ASYNC_RESET)
   ) i_cdc_reset_ctrlr_half_b (
-    .clk_i              ( b_clk_i              ),
-    .rst_ni             ( b_rst_ni             ),
-    .clear_i            ( b_clear_i            ),
-    .clear_o            ( b_clear_o            ),
-    .clear_ack_i        ( b_clear_ack_i        ),
-    .isolate_o          ( b_isolate_o          ),
-    .isolate_ack_i      ( b_isolate_ack_i      ),
-    (* async *) .async_next_phase_o ( async_b2a_next_phase ),
-    (* async *) .async_req_o        ( async_b2a_req        ),
-    (* async *) .async_ack_i        ( async_a2b_ack        ),
-    (* async *) .async_next_phase_i ( async_a2b_next_phase ),
-    (* async *) .async_req_i        ( async_a2b_req        ),
-    (* async *) .async_ack_o        ( async_b2a_ack        )
+      .clk_i             (b_clk_i),
+      .rst_ni            (b_rst_ni),
+      .clear_i           (b_clear_i),
+      .clear_o           (b_clear_o),
+      .clear_ack_i       (b_clear_ack_i),
+      .isolate_o         (b_isolate_o),
+      .isolate_ack_i     (b_isolate_ack_i),
+      .async_next_phase_o(async_b2a_next_phase),
+      .async_req_o       (async_b2a_req),
+      .async_ack_i       (async_a2b_ack),
+      .async_next_phase_i(async_a2b_next_phase),
+      .async_req_i       (async_a2b_req),
+      .async_ack_o       (async_b2a_ack)
   );
 endmodule
 
@@ -187,29 +187,29 @@ endmodule
 module cdc_reset_ctrlr_half
   import cdc_reset_ctrlr_pkg::*;
 #(
-  /// The number of synchronization stages to use for the
-  /// clear signal request/acknowledge. Must be less than
-  /// the number of sync stages used in the CDC
-  parameter int unsigned SYNC_STAGES = 2,
-  /// Whether an asynchronous reset shall cause a clear
-  /// request to be sent to the other side.
-  parameter logic        CLEAR_ON_ASYNC_RESET = 1'b1
-)(
-  // Synchronous side
-  input logic                clk_i,
-  input logic                rst_ni,
-  input logic                clear_i,
-  output logic               isolate_o,
-  input logic                isolate_ack_i,
-  output logic               clear_o,
-  input logic                clear_ack_i,
-  // Asynchronous clear sequence hanshaking
-  output clear_seq_phase_e   async_next_phase_o,
-  output logic               async_req_o,
-  input logic                async_ack_i,
-  input clear_seq_phase_e    async_next_phase_i,
-  input logic                async_req_i,
-  output logic               async_ack_o
+    /// The number of synchronization stages to use for the
+    /// clear signal request/acknowledge. Must be less than
+    /// the number of sync stages used in the CDC
+    parameter int unsigned SYNC_STAGES          = 2,
+    /// Whether an asynchronous reset shall cause a clear
+    /// request to be sent to the other side.
+    parameter logic        CLEAR_ON_ASYNC_RESET = 1'b1
+) (
+    // Synchronous side
+                input  logic             clk_i,
+                input  logic             rst_ni,
+                input  logic             clear_i,
+                output logic             isolate_o,
+                input  logic             isolate_ack_i,
+                output logic             clear_o,
+                input  logic             clear_ack_i,
+    // Asynchronous clear sequence hanshaking
+    (* async *) output clear_seq_phase_e async_next_phase_o,
+    (* async *) output logic             async_req_o,
+    (* async *) input  logic             async_ack_i,
+    (* async *) input  clear_seq_phase_e async_next_phase_i,
+    (* async *) input  logic             async_req_i,
+    (* async *) output logic             async_ack_o
 );
 
 
@@ -241,26 +241,26 @@ module cdc_reset_ctrlr_half
 
   //---------------------- Initiator Side ----------------------
   // Sends clear sequence state transitions to the other side.
-   typedef enum logic[3:0] {
-     IDLE,
-     ISOLATE,
-     WAIT_ISOLATE_PHASE_ACK,
-     WAIT_ISOLATE_ACK,
-     CLEAR,
-     WAIT_CLEAR_PHASE_ACK,
-     WAIT_CLEAR_ACK,
-     POST_CLEAR,
-     FINISHED
+  typedef enum logic [3:0] {
+    IDLE,
+    ISOLATE,
+    WAIT_ISOLATE_PHASE_ACK,
+    WAIT_ISOLATE_ACK,
+    CLEAR,
+    WAIT_CLEAR_PHASE_ACK,
+    WAIT_CLEAR_ACK,
+    POST_CLEAR,
+    FINISHED
   } initiator_state_e;
   initiator_state_e initiator_state_d, initiator_state_q;
 
   // The current phase of the clear sequence, sent to the other side using a
   // 4-phase CDC
-  clear_seq_phase_e          initiator_clear_seq_phase;
-  logic                      initiator_phase_transition_req;
-  logic                      initiator_phase_transition_ack;
-  logic                      initiator_isolate_out;
-  logic                      initiator_clear_out;
+  clear_seq_phase_e initiator_clear_seq_phase;
+  logic             initiator_phase_transition_req;
+  logic             initiator_phase_transition_ack;
+  logic             initiator_isolate_out;
+  logic             initiator_clear_out;
 
   always_comb begin
     initiator_state_d              = initiator_state_q;
@@ -371,8 +371,8 @@ module cdc_reset_ctrlr_half
   always_ff @(posedge clk_i, negedge rst_ni) begin
     if (!rst_ni) begin
       if (CLEAR_ON_ASYNC_RESET) begin
-        initiator_state_q <= ISOLATE; // Start in the ISOLATE state which is
-                                        // the first state of a clear sequence.
+        initiator_state_q <= ISOLATE;  // Start in the ISOLATE state which is
+        // the first state of a clear sequence.
       end else begin
         initiator_state_q <= IDLE;
       end
@@ -387,23 +387,23 @@ module cdc_reset_ctrlr_half
   // introduce spurios transactions.
 
   cdc_4phase_src #(
-    .T(clear_seq_phase_e),
-    .SYNC_STAGES(2),
-    .DECOUPLED(0), // Important! The CDC must not be in decoupled mode.
-                   // Otherwise we will proceed to the next state without
-                   // waiting for the new state to arrive on the other side.
-    .SEND_RESET_MSG(CLEAR_ON_ASYNC_RESET), // Send the ISOLATE phase request immediately on async
-                                           // reset if async reset synchronization is enabled.
-    .RESET_MSG(CLEAR_PHASE_ISOLATE)
-  ) i_state_transition_cdc_src(
-    .clk_i,
-    .rst_ni,
-    .data_i(initiator_clear_seq_phase),
-    .valid_i(initiator_phase_transition_req),
-    .ready_o(initiator_phase_transition_ack),
-    .async_req_o,
-    .async_ack_i,
-    .async_data_o(async_next_phase_o)
+      .T(clear_seq_phase_e),
+      .SYNC_STAGES(2),
+      .DECOUPLED(0),  // Important! The CDC must not be in decoupled mode.
+                      // Otherwise we will proceed to the next state without
+                      // waiting for the new state to arrive on the other side.
+      .SEND_RESET_MSG(CLEAR_ON_ASYNC_RESET),  // Send the ISOLATE phase request immediately on async
+                                              // reset if async reset synchronization is enabled.
+      .RESET_MSG(CLEAR_PHASE_ISOLATE)
+  ) i_state_transition_cdc_src (
+      .clk_i,
+      .rst_ni,
+      .data_i(initiator_clear_seq_phase),
+      .valid_i(initiator_phase_transition_req),
+      .ready_o(initiator_phase_transition_ack),
+      .async_req_o,
+      .async_ack_i,
+      .async_data_o(async_next_phase_o)
   );
 
 
@@ -419,20 +419,20 @@ module cdc_reset_ctrlr_half
   logic receiver_clear_out;
 
   cdc_4phase_dst #(
-    .T(clear_seq_phase_e),
-    .SYNC_STAGES(2),
-    .DECOUPLED(0) // Important! The CDC must not be in decoupled mode. Otherwise
-                  // we will proceed to the next state without waiting for the
-                  // new state to arrive on the other side.
-  ) i_state_transition_cdc_dst(
-    .clk_i,
-    .rst_ni,
-    .data_o(receiver_next_phase),
-    .valid_o(receiver_phase_req),
-    .ready_i(receiver_phase_ack),
-    .async_req_i,
-    .async_ack_o,
-    .async_data_i(async_next_phase_i)
+      .T(clear_seq_phase_e),
+      .SYNC_STAGES(2),
+      .DECOUPLED(0)  // Important! The CDC must not be in decoupled mode. Otherwise
+                     // we will proceed to the next state without waiting for the
+                     // new state to arrive on the other side.
+  ) i_state_transition_cdc_dst (
+      .clk_i,
+      .rst_ni,
+      .data_o(receiver_next_phase),
+      .valid_o(receiver_phase_req),
+      .ready_i(receiver_phase_ack),
+      .async_req_i,
+      .async_ack_o,
+      .async_data_i(async_next_phase_i)
   );
 
   always_ff @(posedge clk_i, negedge rst_ni) begin
@@ -461,7 +461,7 @@ module cdc_reset_ctrlr_half
           receiver_clear_out   = 1'b0;
           receiver_isolate_out = 1'b1;
           // Wait for the isolate to be acknowledged before ack'ing the phase
-          receiver_phase_ack = isolate_ack_i;
+          receiver_phase_ack   = isolate_ack_i;
         end
 
         CLEAR_PHASE_CLEAR: begin
@@ -523,7 +523,7 @@ module cdc_reset_ctrlr_half
   // initiator's clear/isolate signal. This ensures that the correct sequence is
   // followed even if both sides are cleared independently at roughly the same
   // time.
-  assign clear_o = initiator_clear_out || receiver_clear_out;
+  assign clear_o   = initiator_clear_out || receiver_clear_out;
   assign isolate_o = initiator_isolate_out || receiver_isolate_out;
 
 endmodule : cdc_reset_ctrlr_half
