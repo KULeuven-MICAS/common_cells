@@ -44,35 +44,39 @@
 ///
 /// CONSTRAINT: See the constraints for `cdc_2phase`. An additional maximum
 /// delay path needs to be specified from fifo_data_q to dst_data_o.
-module cdc_fifo_2phase #(
-  /// The data type of the payload transported by the FIFO.
-  parameter type T = logic,
-  /// The FIFO's depth given as 2**LOG_DEPTH.
-  parameter int LOG_DEPTH = 3
-)(
-  input  logic src_rst_ni,
-  input  logic src_clk_i,
-  input  T     src_data_i,
-  input  logic src_valid_i,
-  output logic src_ready_o,
 
-  input  logic dst_rst_ni,
-  input  logic dst_clk_i,
-  output T     dst_data_o,
-  output logic dst_valid_o,
-  input  logic dst_ready_i
+(* no_ungroup *)
+(* no_boundary_optimization *)
+(* no_clock_gating *)
+module cdc_fifo_2phase #(
+    /// The data type of the payload transported by the FIFO.
+    parameter type T = logic,
+    /// The FIFO's depth given as 2**LOG_DEPTH.
+    parameter int LOG_DEPTH = 3
+) (
+    input  logic src_rst_ni,
+    input  logic src_clk_i,
+    input  T     src_data_i,
+    input  logic src_valid_i,
+    output logic src_ready_o,
+
+    input  logic dst_rst_ni,
+    input  logic dst_clk_i,
+    output T     dst_data_o,
+    output logic dst_valid_o,
+    input  logic dst_ready_i
 );
 
   // Check the invariants.
-  `ifndef COMMON_CELLS_ASSERTS_OFF
+`ifndef COMMON_CELLS_ASSERTS_OFF
   `ASSERT_INIT(log_depth_0, LOG_DEPTH > 0)
-  `endif
+`endif
 
-  localparam int PtrWidth = LOG_DEPTH+1;
+  localparam int PtrWidth = LOG_DEPTH + 1;
   typedef logic [PtrWidth-1:0] pointer_t;
   typedef logic [LOG_DEPTH-1:0] index_t;
 
-  localparam pointer_t PtrFull  = (1 << LOG_DEPTH);
+  localparam pointer_t PtrFull = (1 << LOG_DEPTH);
   localparam pointer_t PtrEmpty = '0;
 
   // Allocate the registers for the FIFO memory with its separate write and read
@@ -83,16 +87,14 @@ module cdc_fifo_2phase #(
   index_t fifo_widx, fifo_ridx;
   logic fifo_write;
   T fifo_wdata, fifo_rdata;
-  T fifo_data_q [2**LOG_DEPTH];
+  T fifo_data_q[2**LOG_DEPTH];
 
   assign fifo_rdata = fifo_data_q[fifo_ridx];
 
-  for (genvar i = 0; i < 2**LOG_DEPTH; i++) begin : g_word
+  for (genvar i = 0; i < 2 ** LOG_DEPTH; i++) begin : g_word
     always_ff @(posedge src_clk_i, negedge src_rst_ni) begin
-      if (!src_rst_ni)
-        fifo_data_q[i] <= T'('0);
-      else if (fifo_write && fifo_widx == i)
-        fifo_data_q[i] <= fifo_wdata;
+      if (!src_rst_ni) fifo_data_q[i] <= T'('0);
+      else if (fifo_write && fifo_widx == i) fifo_data_q[i] <= fifo_wdata;
     end
   end
 
@@ -100,17 +102,13 @@ module cdc_fifo_2phase #(
   pointer_t src_wptr_q, dst_wptr, src_rptr, dst_rptr_q;
 
   always_ff @(posedge src_clk_i, negedge src_rst_ni) begin
-    if (!src_rst_ni)
-      src_wptr_q <= 0;
-    else if (src_valid_i && src_ready_o)
-      src_wptr_q <= src_wptr_q + 1;
+    if (!src_rst_ni) src_wptr_q <= 0;
+    else if (src_valid_i && src_ready_o) src_wptr_q <= src_wptr_q + 1;
   end
 
   always_ff @(posedge dst_clk_i, negedge dst_rst_ni) begin
-    if (!dst_rst_ni)
-      dst_rptr_q <= 0;
-    else if (dst_valid_o && dst_ready_i)
-      dst_rptr_q <= dst_rptr_q + 1;
+    if (!dst_rst_ni) dst_rptr_q <= 0;
+    else if (dst_valid_o && dst_ready_i) dst_rptr_q <= dst_rptr_q + 1;
   end
 
   // The pointers into the FIFO are one bit wider than the actual address into
@@ -121,30 +119,34 @@ module cdc_fifo_2phase #(
   assign dst_valid_o = ((dst_rptr_q ^ dst_wptr) != PtrEmpty);
 
   // Transport the read and write pointers across the clock domain boundary.
-  cdc_2phase #( .T(pointer_t) ) i_cdc_wptr (
-    .src_rst_ni  ( src_rst_ni ),
-    .src_clk_i   ( src_clk_i  ),
-    .src_data_i  ( src_wptr_q ),
-    .src_valid_i ( 1'b1       ),
-    .src_ready_o (            ),
-    .dst_rst_ni  ( dst_rst_ni ),
-    .dst_clk_i   ( dst_clk_i  ),
-    .dst_data_o  ( dst_wptr   ),
-    .dst_valid_o (            ),
-    .dst_ready_i ( 1'b1       )
+  cdc_2phase #(
+      .T(pointer_t)
+  ) i_cdc_wptr (
+      .src_rst_ni (src_rst_ni),
+      .src_clk_i  (src_clk_i),
+      .src_data_i (src_wptr_q),
+      .src_valid_i(1'b1),
+      .src_ready_o(),
+      .dst_rst_ni (dst_rst_ni),
+      .dst_clk_i  (dst_clk_i),
+      .dst_data_o (dst_wptr),
+      .dst_valid_o(),
+      .dst_ready_i(1'b1)
   );
 
-  cdc_2phase #( .T(pointer_t) ) i_cdc_rptr (
-    .src_rst_ni  ( dst_rst_ni ),
-    .src_clk_i   ( dst_clk_i  ),
-    .src_data_i  ( dst_rptr_q ),
-    .src_valid_i ( 1'b1       ),
-    .src_ready_o (            ),
-    .dst_rst_ni  ( src_rst_ni ),
-    .dst_clk_i   ( src_clk_i  ),
-    .dst_data_o  ( src_rptr   ),
-    .dst_valid_o (            ),
-    .dst_ready_i ( 1'b1       )
+  cdc_2phase #(
+      .T(pointer_t)
+  ) i_cdc_rptr (
+      .src_rst_ni (dst_rst_ni),
+      .src_clk_i  (dst_clk_i),
+      .src_data_i (dst_rptr_q),
+      .src_valid_i(1'b1),
+      .src_ready_o(),
+      .dst_rst_ni (src_rst_ni),
+      .dst_clk_i  (src_clk_i),
+      .dst_data_o (src_rptr),
+      .dst_valid_o(),
+      .dst_ready_i(1'b1)
   );
 
   // Drive the FIFO write and read ports.

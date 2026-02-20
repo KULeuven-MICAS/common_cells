@@ -40,20 +40,24 @@
 /// CONSTRAINT: Requires max_delay of min_period(src_clk_i, dst_clk_i) through
 /// the paths async_req, async_ack, async_data.
 /* verilator lint_off DECLFILENAME */
-module cdc_2phase #(
-  parameter type T = logic
-)(
-  input  logic src_rst_ni,
-  input  logic src_clk_i,
-  input  T     src_data_i,
-  input  logic src_valid_i,
-  output logic src_ready_o,
 
-  input  logic dst_rst_ni,
-  input  logic dst_clk_i,
-  output T     dst_data_o,
-  output logic dst_valid_o,
-  input  logic dst_ready_i
+(* no_ungroup *)
+(* no_boundary_optimization *)
+(* no_clock_gating *)
+module cdc_2phase #(
+    parameter type T = logic
+) (
+    input  logic src_rst_ni,
+    input  logic src_clk_i,
+    input  T     src_data_i,
+    input  logic src_valid_i,
+    output logic src_ready_o,
+
+    input  logic dst_rst_ni,
+    input  logic dst_clk_i,
+    output T     dst_data_o,
+    output logic dst_valid_o,
+    input  logic dst_ready_i
 );
 
   // Asynchronous handshake signals.
@@ -62,27 +66,31 @@ module cdc_2phase #(
   (* dont_touch = "true" *) T async_data;
 
   // The sender in the source domain.
-  cdc_2phase_src #(.T(T)) i_src (
-    .rst_ni       ( src_rst_ni  ),
-    .clk_i        ( src_clk_i   ),
-    .data_i       ( src_data_i  ),
-    .valid_i      ( src_valid_i ),
-    .ready_o      ( src_ready_o ),
-    .async_req_o  ( async_req   ),
-    .async_ack_i  ( async_ack   ),
-    .async_data_o ( async_data  )
+  cdc_2phase_src #(
+      .T(T)
+  ) i_src (
+      .rst_ni      (src_rst_ni),
+      .clk_i       (src_clk_i),
+      .data_i      (src_data_i),
+      .valid_i     (src_valid_i),
+      .ready_o     (src_ready_o),
+      .async_req_o (async_req),
+      .async_ack_i (async_ack),
+      .async_data_o(async_data)
   );
 
   // The receiver in the destination domain.
-  cdc_2phase_dst #(.T(T)) i_dst (
-    .rst_ni       ( dst_rst_ni  ),
-    .clk_i        ( dst_clk_i   ),
-    .data_o       ( dst_data_o  ),
-    .valid_o      ( dst_valid_o ),
-    .ready_i      ( dst_ready_i ),
-    .async_req_i  ( async_req   ),
-    .async_ack_o  ( async_ack   ),
-    .async_data_i ( async_data  )
+  cdc_2phase_dst #(
+      .T(T)
+  ) i_dst (
+      .rst_ni      (dst_rst_ni),
+      .clk_i       (dst_clk_i),
+      .data_o      (dst_data_o),
+      .valid_o     (dst_valid_o),
+      .ready_i     (dst_ready_i),
+      .async_req_i (async_req),
+      .async_ack_o (async_ack),
+      .async_data_i(async_data)
   );
 
 endmodule
@@ -90,16 +98,16 @@ endmodule
 
 /// Half of the two-phase clock domain crossing located in the source domain.
 module cdc_2phase_src #(
-  parameter type T = logic
-)(
-  input  logic rst_ni,
-  input  logic clk_i,
-  input  T     data_i,
-  input  logic valid_i,
-  output logic ready_o,
-  output logic async_req_o,
-  input  logic async_ack_i,
-  output T     async_data_o
+    parameter type T = logic
+) (
+    input  logic rst_ni,
+    input  logic clk_i,
+    input  T     data_i,
+    input  logic valid_i,
+    output logic ready_o,
+    output logic async_req_o,
+    input  logic async_ack_i,
+    output T     async_data_o
 );
 
   (* dont_touch = "true" *)
@@ -140,20 +148,19 @@ endmodule
 /// Half of the two-phase clock domain crossing located in the destination
 /// domain.
 module cdc_2phase_dst #(
-  parameter type T = logic
-)(
-  input  logic rst_ni,
-  input  logic clk_i,
-  output T     data_o,
-  output logic valid_o,
-  input  logic ready_i,
-  input  logic async_req_i,
-  output logic async_ack_o,
-  input  T     async_data_i
+    parameter type T = logic
+) (
+    input  logic rst_ni,
+    input  logic clk_i,
+    output T     data_o,
+    output logic valid_o,
+    input  logic ready_i,
+    input  logic async_req_i,
+    output logic async_ack_o,
+    input  T     async_data_i
 );
 
-  (* dont_touch = "true" *)
-  (* async_reg = "true" *)
+  (* dont_touch = "true" *) (* async_reg = "true" *)
   logic req_dst_q, req_q0, req_q1, ack_dst_q;
   (* dont_touch = "true" *)
   T data_dst_q;
@@ -161,9 +168,9 @@ module cdc_2phase_dst #(
   // The ack_dst register changes when a new data item is accepted.
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      ack_dst_q  <= 0;
+      ack_dst_q <= 0;
     end else if (valid_o && ready_i) begin
-      ack_dst_q  <= ~ack_dst_q;
+      ack_dst_q <= ~ack_dst_q;
     end
   end
 

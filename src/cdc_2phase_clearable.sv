@@ -51,47 +51,50 @@
 `include "common_cells/registers.svh"
 `include "common_cells/assertions.svh"
 
+(* no_ungroup *) (* no_boundary_optimization *) (* no_clock_gating *)
 module cdc_2phase_clearable #(
-  parameter type T = logic,
-  parameter int unsigned SYNC_STAGES = 3,
-  parameter int CLEAR_ON_ASYNC_RESET = 1
-)(
-  input  logic src_rst_ni,
-  input  logic src_clk_i,
-  input  logic src_clear_i,
-  output logic src_clear_pending_o,
-  input  T     src_data_i,
-  input  logic src_valid_i,
-  output logic src_ready_o,
+    parameter type T = logic,
+    parameter int unsigned SYNC_STAGES = 3,
+    parameter int CLEAR_ON_ASYNC_RESET = 1
+) (
+    input  logic src_rst_ni,
+    input  logic src_clk_i,
+    input  logic src_clear_i,
+    output logic src_clear_pending_o,
+    input  T     src_data_i,
+    input  logic src_valid_i,
+    output logic src_ready_o,
 
-  input  logic dst_rst_ni,
-  input  logic dst_clk_i,
-  input  logic dst_clear_i,
-  output logic dst_clear_pending_o,
-  output T     dst_data_o,
-  output logic dst_valid_o,
-  input  logic dst_ready_i
+    input  logic dst_rst_ni,
+    input  logic dst_clk_i,
+    input  logic dst_clear_i,
+    output logic dst_clear_pending_o,
+    output T     dst_data_o,
+    output logic dst_valid_o,
+    input  logic dst_ready_i
 );
-  logic        s_src_clear_req;
-  logic        s_src_clear_ack_q;
-  logic        s_src_ready;
-  logic        s_src_isolate_req;
-  logic        s_src_isolate_ack_q;
-  logic        s_dst_clear_req;
-  logic        s_dst_clear_ack_q;
-  logic        s_dst_valid;
-  logic        s_dst_isolate_req;
-  logic        s_dst_isolate_ack_q;
+  logic s_src_clear_req;
+  logic s_src_clear_ack_q;
+  logic s_src_ready;
+  logic s_src_isolate_req;
+  logic s_src_isolate_ack_q;
+  logic s_dst_clear_req;
+  logic s_dst_clear_ack_q;
+  logic s_dst_valid;
+  logic s_dst_isolate_req;
+  logic s_dst_isolate_ack_q;
 
   // Asynchronous handshake signals between the CDCs
-  (* dont_touch = "true" *) logic async_req;
-  (* dont_touch = "true" *) logic async_ack;
-  (* dont_touch = "true" *) T async_data;
+  (* dont_touch = "true" *)logic async_req;
+  (* dont_touch = "true" *)logic async_ack;
+  (* dont_touch = "true" *)T     async_data;
 
   if (CLEAR_ON_ASYNC_RESET) begin : gen_elaboration_assertion
     if (SYNC_STAGES < 3)
-      $error("The clearable 2-phase CDC with async reset",
-             "synchronization requires at least 3 synchronizer stages for the FIFO.");
+      $error(
+          "The clearable 2-phase CDC with async reset",
+          "synchronization requires at least 3 synchronizer stages for the FIFO."
+      );
   end else begin : gen_elaboration_assertion
     if (SYNC_STAGES < 2) begin : gen_elaboration_assertion
       $error("A minimum of 2 synchronizer stages is required for proper functionality.");
@@ -101,18 +104,18 @@ module cdc_2phase_clearable #(
 
   // The sender in the source domain.
   cdc_2phase_src_clearable #(
-    .T           ( T           ),
-    .SYNC_STAGES ( SYNC_STAGES )
+      .T          (T),
+      .SYNC_STAGES(SYNC_STAGES)
   ) i_src (
-    .rst_ni       ( src_rst_ni                       ),
-    .clk_i        ( src_clk_i                        ),
-    .clear_i      ( s_src_clear_req                      ),
-    .data_i       ( src_data_i                       ),
-    .valid_i      ( src_valid_i & !s_src_isolate_req ),
-    .ready_o      ( s_src_ready                      ),
-    .async_req_o  ( async_req                        ),
-    .async_ack_i  ( async_ack                        ),
-    .async_data_o ( async_data                       )
+      .rst_ni      (src_rst_ni),
+      .clk_i       (src_clk_i),
+      .clear_i     (s_src_clear_req),
+      .data_i      (src_data_i),
+      .valid_i     (src_valid_i & !s_src_isolate_req),
+      .ready_o     (s_src_ready),
+      .async_req_o (async_req),
+      .async_ack_i (async_ack),
+      .async_data_o(async_data)
   );
 
   assign src_ready_o = s_src_ready & !s_src_isolate_req;
@@ -120,18 +123,18 @@ module cdc_2phase_clearable #(
 
   // The receiver in the destination domain.
   cdc_2phase_dst_clearable #(
-    .T           ( T           ),
-    .SYNC_STAGES ( SYNC_STAGES )
+      .T          (T),
+      .SYNC_STAGES(SYNC_STAGES)
   ) i_dst (
-    .rst_ni       ( dst_rst_ni                       ),
-    .clk_i        ( dst_clk_i                        ),
-    .clear_i      ( s_dst_clear_req                      ),
-    .data_o       ( dst_data_o                       ),
-    .valid_o      ( s_dst_valid                      ),
-    .ready_i      ( dst_ready_i & !s_dst_isolate_req ),
-    .async_req_i  ( async_req                        ),
-    .async_ack_o  ( async_ack                        ),
-    .async_data_i ( async_data                       )
+      .rst_ni      (dst_rst_ni),
+      .clk_i       (dst_clk_i),
+      .clear_i     (s_dst_clear_req),
+      .data_o      (dst_data_o),
+      .valid_o     (s_dst_valid),
+      .ready_i     (dst_ready_i & !s_dst_isolate_req),
+      .async_req_i (async_req),
+      .async_ack_o (async_ack),
+      .async_data_i(async_data)
   );
 
   assign dst_valid_o = s_dst_valid & !s_dst_isolate_req;
@@ -139,22 +142,22 @@ module cdc_2phase_clearable #(
   // Synchronize the clear and reset signaling in both directions (see header of
   // the cdc_reset_ctrlr module for more details.)
   cdc_reset_ctrlr #(
-    .SYNC_STAGES(SYNC_STAGES-1)
+      .SYNC_STAGES(SYNC_STAGES - 1)
   ) i_cdc_reset_ctrlr (
-    .a_clk_i         ( src_clk_i           ),
-    .a_rst_ni        ( src_rst_ni          ),
-    .a_clear_i       ( src_clear_i         ),
-    .a_clear_o       ( s_src_clear_req     ),
-    .a_clear_ack_i   ( s_src_clear_ack_q   ),
-    .a_isolate_o     ( s_src_isolate_req   ),
-    .a_isolate_ack_i ( s_src_isolate_ack_q ),
-    .b_clk_i         ( dst_clk_i           ),
-    .b_rst_ni        ( dst_rst_ni          ),
-    .b_clear_i       ( dst_clear_i         ),
-    .b_clear_o       ( s_dst_clear_req     ),
-    .b_clear_ack_i   ( s_dst_clear_ack_q   ),
-    .b_isolate_o     ( s_dst_isolate_req   ),
-    .b_isolate_ack_i ( s_dst_isolate_ack_q )
+      .a_clk_i        (src_clk_i),
+      .a_rst_ni       (src_rst_ni),
+      .a_clear_i      (src_clear_i),
+      .a_clear_o      (s_src_clear_req),
+      .a_clear_ack_i  (s_src_clear_ack_q),
+      .a_isolate_o    (s_src_isolate_req),
+      .a_isolate_ack_i(s_src_isolate_ack_q),
+      .b_clk_i        (dst_clk_i),
+      .b_rst_ni       (dst_rst_ni),
+      .b_clear_i      (dst_clear_i),
+      .b_clear_o      (s_dst_clear_req),
+      .b_clear_ack_i  (s_dst_clear_ack_q),
+      .b_isolate_o    (s_dst_isolate_req),
+      .b_isolate_ack_i(s_dst_isolate_ack_q)
   );
 
   // Just delay the isolate request by one cycle. We can ensure isolation within
@@ -180,7 +183,7 @@ module cdc_2phase_clearable #(
   end
 
 
-  assign src_clear_pending_o = s_src_isolate_req; // The isolate signal stays
+  assign src_clear_pending_o = s_src_isolate_req;  // The isolate signal stays
   // asserted during the whole
   // clear sequence.
   assign dst_clear_pending_o = s_dst_isolate_req;
@@ -197,33 +200,33 @@ endmodule
 
 /// Half of the two-phase clock domain crossing located in the source domain.
 module cdc_2phase_src_clearable #(
-  parameter type T = logic,
-  parameter int unsigned SYNC_STAGES = 2
+    parameter type T = logic,
+    parameter int unsigned SYNC_STAGES = 2
 ) (
-  input  logic rst_ni,
-  input  logic clk_i,
-  input  logic clear_i,
-  input  T     data_i,
-  input  logic valid_i,
-  output logic ready_o,
-  output logic async_req_o,
-  input  logic async_ack_i,
-  output T     async_data_o
+    input  logic rst_ni,
+    input  logic clk_i,
+    input  logic clear_i,
+    input  T     data_i,
+    input  logic valid_i,
+    output logic ready_o,
+    output logic async_req_o,
+    input  logic async_ack_i,
+    output T     async_data_o
 );
 
   (* dont_touch = "true" *)
-  logic  req_src_d, req_src_q, ack_synced;
+  logic req_src_d, req_src_q, ack_synced;
   (* dont_touch = "true" *)
   T data_src_d, data_src_q;
 
   // Synchronize the async ACK
   sync #(
-    .STAGES(SYNC_STAGES)
-  ) i_sync(
-    .clk_i,
-    .rst_ni,
-    .serial_i( async_ack_i ),
-    .serial_o( ack_synced  )
+      .STAGES(SYNC_STAGES)
+  ) i_sync (
+      .clk_i,
+      .rst_ni,
+      .serial_i(async_ack_i),
+      .serial_o(ack_synced)
   );
 
   // If we receive the clear signal clear the content of the request flip-flop
@@ -232,8 +235,8 @@ module cdc_2phase_src_clearable #(
     data_src_d = data_src_q;
     req_src_d  = req_src_q;
     if (clear_i) begin
-      req_src_d  = 1'b0;
-    // The req_src and data_src registers change when a new data item is accepted.
+      req_src_d = 1'b0;
+      // The req_src and data_src registers change when a new data item is accepted.
     end else if (valid_i && ready_o) begin
       req_src_d  = ~req_src_q;
       data_src_d = data_i;
@@ -244,9 +247,9 @@ module cdc_2phase_src_clearable #(
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      req_src_q  <= 0;
+      req_src_q <= 0;
     end else begin
-      req_src_q  <= req_src_d;
+      req_src_q <= req_src_d;
     end
   end
 
@@ -255,7 +258,7 @@ module cdc_2phase_src_clearable #(
   assign async_req_o = req_src_q;
   assign async_data_o = data_src_q;
 
-// Assertions
+  // Assertions
 `ifndef COMMON_CELLS_ASSERTS_OFF
   `ASSUME(no_clear_and_request, clear_i |-> ~valid_i, clk_i, !rst_ni,
           "No request allowed while clear_i is asserted.")
@@ -267,35 +270,34 @@ endmodule
 /// Half of the two-phase clock domain crossing located in the destination
 /// domain.
 module cdc_2phase_dst_clearable #(
-  parameter type T = logic,
-  parameter int unsigned SYNC_STAGES = 2
-)(
-  input  logic rst_ni,
-  input  logic clk_i,
-  input  logic clear_i,
-  output T     data_o,
-  output logic valid_o,
-  input  logic ready_i,
-  input  logic async_req_i,
-  output logic async_ack_o,
-  input  T     async_data_i
+    parameter type T = logic,
+    parameter int unsigned SYNC_STAGES = 2
+) (
+    input  logic rst_ni,
+    input  logic clk_i,
+    input  logic clear_i,
+    output T     data_o,
+    output logic valid_o,
+    input  logic ready_i,
+    input  logic async_req_i,
+    output logic async_ack_o,
+    input  T     async_data_i
 );
 
-  (* dont_touch = "true" *)
-  (* async_reg = "true" *)
- logic ack_dst_d, ack_dst_q, req_synced, req_synced_q1;
+  (* dont_touch = "true" *) (* async_reg = "true" *)
+  logic ack_dst_d, ack_dst_q, req_synced, req_synced_q1;
   (* dont_touch = "true" *)
   T data_dst_d, data_dst_q;
 
 
   //Synchronize the request
   sync #(
-    .STAGES(SYNC_STAGES)
-  ) i_sync(
-    .clk_i,
-    .rst_ni,
-    .serial_i( async_req_i ),
-    .serial_o( req_synced  )
+      .STAGES(SYNC_STAGES)
+  ) i_sync (
+      .clk_i,
+      .rst_ni,
+      .serial_i(async_req_i),
+      .serial_o(req_synced)
   );
 
   // The ack_dst register changes when a new data item is accepted.

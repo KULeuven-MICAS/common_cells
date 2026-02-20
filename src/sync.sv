@@ -4,13 +4,14 @@
 
 // Author: Yunhao Deng <yunhao.deng@kuleuven.be>
 
+(* no_clock_gating *)
 module sync #(
     parameter int unsigned STAGES = 2,
     parameter bit ResetValue = 1'b0
 ) (
-    input logic clk_i,
-    input logic rst_ni,
-    input logic serial_i,
+    input  logic clk_i,
+    input  logic rst_ni,
+    input  logic serial_i,
     output logic serial_o
 );
 
@@ -22,7 +23,7 @@ module sync #(
     (* dont_touch = "true", ASYNC_REG = "true" *) logic d;
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (!rst_ni) begin
-        d <= 1'b0;
+        d <= ResetValue;
       end else begin
         d <= d_chain[i];
       end

@@ -106,6 +106,9 @@
 // SPDX-License-Identifier: SHL-0.51
 // -----------------------------------------------------------------------------
 
+(* no_ungroup *)
+(* no_boundary_optimization *)
+(* no_clock_gating *)
 module cdc_reset_ctrlr
   import cdc_reset_ctrlr_pkg::*;
 #(
