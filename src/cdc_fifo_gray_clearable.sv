@@ -98,7 +98,7 @@
 `include "common_cells/registers.svh"
 `include "common_cells/assertions.svh"
 
-(* no_ungroup *) (* no_boundary_optimization *) (* no_clock_gating *)
+(* no_ungroup *) (* no_boundary_optimization *)
 module cdc_fifo_gray_clearable #(
     /// The width of the default logic type.
     parameter int unsigned WIDTH = 1,

@@ -51,7 +51,7 @@
 `include "common_cells/registers.svh"
 `include "common_cells/assertions.svh"
 
-(* no_ungroup *) (* no_boundary_optimization *) (* no_clock_gating *)
+(* no_ungroup *) (* no_boundary_optimization *)
 module cdc_2phase_clearable #(
     parameter type T = logic,
     parameter int unsigned SYNC_STAGES = 3,

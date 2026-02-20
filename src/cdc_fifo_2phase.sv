@@ -47,7 +47,6 @@
 
 (* no_ungroup *)
 (* no_boundary_optimization *)
-(* no_clock_gating *)
 module cdc_fifo_2phase #(
     /// The data type of the payload transported by the FIFO.
     parameter type T = logic,

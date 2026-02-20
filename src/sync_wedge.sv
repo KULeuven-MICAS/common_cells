@@ -10,6 +10,7 @@
 
 // Antonio Pullini <pullinia@iis.ee.ethz.ch>
 
+(* no_clock_gating *)
 module sync_wedge #(
     parameter int unsigned STAGES = 2
 ) (
@@ -21,36 +22,36 @@ module sync_wedge #(
     output logic f_edge_o,
     output logic serial_o
 );
-    logic clk;
-    logic serial, serial_q;
+  logic clk;
+  logic serial, serial_q;
 
-    assign serial_o =  serial_q;
-    assign f_edge_o = (~serial) & serial_q;
-    assign r_edge_o =  serial & (~serial_q);
+  assign serial_o = serial_q;
+  assign f_edge_o = (~serial) & serial_q;
+  assign r_edge_o = serial & (~serial_q);
 
-    sync #(
-        .STAGES (STAGES)
-    ) i_sync (
-        .clk_i,
-        .rst_ni,
-        .serial_i,
-        .serial_o ( serial )
-    );
+  sync #(
+      .STAGES(STAGES)
+  ) i_sync (
+      .clk_i,
+      .rst_ni,
+      .serial_i,
+      .serial_o(serial)
+  );
 
-    pulp_clock_gating i_pulp_clock_gating (
-        .clk_i,
-        .en_i,
-        .test_en_i ( 1'b0 ),
-        .clk_o     ( clk  )
-    );
+  pulp_clock_gating i_pulp_clock_gating (
+      .clk_i,
+      .en_i,
+      .test_en_i(1'b0),
+      .clk_o    (clk)
+  );
 
-    always_ff @(posedge clk, negedge rst_ni) begin
-        if (!rst_ni) begin
-            serial_q <= 1'b0;
-        end else begin
-            if (en_i) begin
-                serial_q <= serial;
-            end
-        end
+  always_ff @(posedge clk, negedge rst_ni) begin
+    if (!rst_ni) begin
+      serial_q <= 1'b0;
+    end else begin
+      if (en_i) begin
+        serial_q <= serial;
+      end
     end
+  end
 endmodule
