@@ -282,9 +282,13 @@ module rr_arb_tree #(
           // arbitration: round robin
           assign sel =  ~req_nodes[Idx1] | req_nodes[Idx1+1] & rr_q[NumLevels-1-level];
 
+          // A child's index has no bits above its own level, so the winning side's bit is ORed in
+          // and the child is passed whole. The equivalent `{sel, child[k:0]}` part-select
+          // concatenation is miscompiled by VCS `-fgp` when the element straddles a 32-bit word
+          // of the packed `index_nodes` (seen with 65..128 inputs, two or more instances).
           assign index_nodes[Idx0] = (sel) ?
-            idx_t'({1'b1, index_nodes[Idx1+1][NumLevels-unsigned'(level)-2:0]}) :
-            idx_t'({1'b0, index_nodes[Idx1][NumLevels-unsigned'(level)-2:0]});
+            (index_nodes[Idx1+1] | (idx_t'(1) << (NumLevels-1-level))) :
+            index_nodes[Idx1];
 
           assign data_nodes[Idx0]  = (sel) ? data_nodes[Idx1+1] : data_nodes[Idx1];
           assign gnt_nodes[Idx1]   = gnt_nodes[Idx0] & ~sel;
