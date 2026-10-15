@@ -50,7 +50,16 @@ sources:
       - src/plru_tree.sv
       - src/passthrough_stream_fifo.sv
       - src/popcount.sv
+  # `rr_arb_tree` is the same module either way. The fast_sim model (a procedural description for
+  # simulation speed, no hierarchy of tree nodes) replaces the structural one.
+  - target: all(not(all(xilinx,vivado_ipx)), not(fast_sim))
+    files:
       - src/rr_arb_tree.sv
+  - target: all(not(all(xilinx,vivado_ipx)), fast_sim)
+    files:
+      - src/fast_sim/rr_arb_tree.sv
+  - target: not(all(xilinx,vivado_ipx))
+    files:
       - src/rstgen_bypass.sv
       - src/serial_deglitch.sv
       - src/shift_reg.sv
